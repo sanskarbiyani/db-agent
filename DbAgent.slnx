@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/api/">
+    <Project Path="api/DbAgent.Api.csproj" />
+  </Folder>
+  <Folder Name="/common/">
+    <Project Path="common/DbAgent.Common.csproj" />
+  </Folder>
+</Solution>
