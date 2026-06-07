@@ -1,12 +1,31 @@
-var builder = WebApplication.CreateBuilder(args);
+using Serilog;
+using DbAgent.Api.Kafka;
 
-// Add services to the container
-builder.Services.AddControllers();
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/dbagent-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
-var app = builder.Build();
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
 
-// Configure the HTTP request pipeline
-app.UseHttpsRedirection();
-app.MapControllers();
+    builder.Host.UseSerilog();
+    builder.Services.AddControllers();
+    builder.Services.AddSingleton<KafkaProducer>();
 
-app.Run();
+    var app = builder.Build();
+
+    app.UseHttpsRedirection();
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application failed to start");
+}
+finally
+{
+    Log.CloseAndFlush();
+}

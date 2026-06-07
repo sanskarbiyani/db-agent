@@ -485,3 +485,4 @@ $RECYCLE.BIN/
 __pycache__/
 *.pyc
 venv/
+logs/
