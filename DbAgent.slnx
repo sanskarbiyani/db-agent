@@ -5,4 +5,8 @@
   <Folder Name="/common/">
     <Project Path="common/DbAgent.Common.csproj" />
   </Folder>
+  <Folder Name="/consumers/" />
+  <Folder Name="/consumers/DbExecutor/">
+    <Project Path="consumers/DbExecutor/DbAgent.DbExecutor.csproj" />
+  </Folder>
 </Solution>

@@ -1,5 +1,4 @@
 using Confluent.Kafka;
-using DbAgent.Common.Messages;
 using System.Text.Json;
 
 namespace DbAgent.Api.Kafka;
@@ -23,7 +22,7 @@ public class KafkaProducer : IDisposable
         _producer = new ProducerBuilder<string, string>(config).Build();
     }
 
-    public async Task ProduceAsync<T>(string topic, T message)
+    public async Task<bool> ProduceAsync<T>(string topic, T message)
     {
         var json = JsonSerializer.Serialize(message);
         var kafkaMessage = new Message<string, string>
@@ -32,10 +31,26 @@ public class KafkaProducer : IDisposable
             Value = json
         };
 
-        var result = await _producer.ProduceAsync(topic, kafkaMessage);
-        _logger.LogInformation(
-            "Message delivered to topic {Topic}, partition {Partition}, offset {Offset}",
-            result.Topic, result.Partition, result.Offset);
+        try
+        {
+            var result = await _producer.ProduceAsync(topic, kafkaMessage);
+            _logger.LogInformation(
+                "Message delivered to topic {Topic}, partition {Partition}, offset {Offset}",
+                result.Topic, result.Partition, result.Offset);
+            
+            if(result.Status == PersistenceStatus.Persisted)
+                return true;
+            else
+            {
+                _logger.LogError("Message not persisted to topic {Topic}. Status: {Status}", topic, result.Status);
+                return false;
+            }
+        }
+        catch (ProduceException<string, string> ex)
+        {
+            _logger.LogError(ex, "Failed to deliver message to topic {Topic}", topic);
+            return false;
+        }
     }
 
     public void Dispose()
