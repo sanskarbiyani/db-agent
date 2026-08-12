@@ -65,7 +65,7 @@ public class DatabaseService
             executionResult = ExecutionResult.Failure("UNKNOWN_ERROR", ex.Message);
         }
 
-        if(!executionResult.IsSuccess)
+        if (!executionResult.IsSuccess)
         {
             var errorCategory = ErrorClassifier.Classify(executionResult.ErrorType!, executionResult.ErrorMessage!);
 

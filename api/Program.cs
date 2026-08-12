@@ -2,6 +2,7 @@ using Serilog;
 using DbAgent.Api.Kafka;
 using DbAgent.Api.Common;
 using DbAgent.Api.Services;
+using System.Text.Json;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -18,6 +19,16 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     builder.Services.AddScoped<IDatabaseService, DatabaseService>();
+    builder.Services.AddHttpClient<ISQLAgentClient, SQLAgentClient>(client =>
+    {
+        client.BaseAddress = new Uri(builder.Configuration["SQLAgent:BaseUrl"] ?? "http://localhost:8000");
+        client.Timeout = TimeSpan.FromSeconds(30);
+    });
+
+    builder.Services.ConfigureHttpJsonOptions(options =>
+    {
+        options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower; // Python style naming
+    });
     builder.Services.AddSingleton<KafkaProducer>();
 
     var app = builder.Build();
