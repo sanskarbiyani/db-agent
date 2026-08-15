@@ -38,8 +38,8 @@ public class CommandController : ControllerBase
                     Name: "fruits",
                     Columns: new List<ColumnInfo>
                     {
-                        new ColumnInfo(Name: "name", DataType: "character varying", IsNullable: true),
-                        new ColumnInfo(Name: "price", DataType: "numeric", IsNullable: false)
+                        new ColumnInfo(Name: "name", DataType: "character varying", IsNullable: false),
+                        new ColumnInfo(Name: "price", DataType: "numeric", IsNullable: true)
                     }
                 ),
                 new TableInfo(

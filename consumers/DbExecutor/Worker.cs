@@ -1,6 +1,7 @@
 using Confluent.Kafka;
 using DbAgent.Common;
 using DbAgent.Common.Messages;
+using DbAgent.DbExecutor.Interfaces;
 using DbAgent.DbExecutor.Services;
 using System.Text.Json;
 
@@ -10,12 +11,12 @@ public class Worker : BackgroundService
 {
     private readonly ILogger<Worker> _logger;
     private readonly IConfiguration _configuration;
-    private readonly DatabaseService _databaseService;
+    private readonly IDatabaseService _databaseService;
 
     public Worker(
         ILogger<Worker> logger,
         IConfiguration configuration,
-        DatabaseService databaseService)
+        IDatabaseService databaseService)
     {
         _logger = logger;
         _configuration = configuration;
@@ -139,12 +140,14 @@ public class Worker : BackgroundService
             "Routed ExecutionId: {ExecutionId} to topic: {Topic}",
             message.ExecutionId, topic);
 
-
-        await _databaseService.LogAttemptAsync(
-            message.ExecutionId,
-            1,
-            result.ErrorType!,
-            result.ErrorMessage!,
-            false);
+        // Not Required because we are updating the status in the query execution table to retring.
+        // Which indicated that first attempt has failed.
+        // This insert just consumes extra entry in the query attempt table.
+        //await _databaseService.LogAttemptAsync(
+        //    message.ExecutionId,
+        //    1,
+        //    result.ErrorType!,
+        //    result.ErrorMessage!,
+        //    false);
     }
 }

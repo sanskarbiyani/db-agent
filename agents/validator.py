@@ -36,10 +36,10 @@ def check_dml_statement(sql_command: str, schema: SchemaContext) -> tuple[bool, 
     except ParseError:
         return False, "Invalid SQL syntax."
 
-    if isinstance(parsed, (exp.Insert, exp.Update, exp.Delete)):
+    if isinstance(parsed, (exp.Insert, exp.Update, exp.Delete, exp.Select)):
         return True, None
     else:
-        return False, "The provided SQL statement is not a DML statement."
+        return False, "The provided SQL statement is not a DML / Select statement."
 
 
 def check_where_clause_for_update_delete(sql_command: str, schema: SchemaContext) -> tuple[bool, str | None]:
@@ -117,6 +117,9 @@ def check_non_nullable_columns(sql_command: str, schema: SchemaContext) -> tuple
         parsed = sqlglot.parse_one(sql_command, dialect="postgres")
     except ParseError:
         return False, "Invalid SQL syntax."
+
+    if isinstance(parsed, exp.Select) or isinstance(parsed, exp.Delete) or isinstance(parsed, exp.Update):
+        return True, None  # SELECT statements do not insert data, so we skip this check
 
     non_nullable_columns = {
         (table.name, col.name)

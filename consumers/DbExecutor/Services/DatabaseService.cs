@@ -1,26 +1,26 @@
 using Dapper;
-using Npgsql;
 using DbAgent.Common.Messages;
+using DbAgent.DbExecutor.Interfaces;
+using Npgsql;
 
 namespace DbAgent.DbExecutor.Services;
 
-public class DatabaseService
+public class DatabaseService: IDatabaseService
 {
     private readonly string _connectionString;
     private readonly ILogger<DatabaseService> _logger;
 
     public DatabaseService(IConfiguration configuration, ILogger<DatabaseService> logger)
     {
-        _connectionString = configuration.GetConnectionString("DefaultConnection")!;
+        _connectionString = configuration.GetConnectionString("ErrorConnection")!;
         _logger = logger;
     }
 
     public async Task<(ExecutionResult, ErrorCategory? errorCategory)> ExecuteSqlAsync(QueryMessage message)
     {
-        NpgsqlConnection? connection = null;
+        await using NpgsqlConnection connection = new NpgsqlConnection(_connectionString);
         try
         {
-            connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
         }
         catch (Exception ex)
@@ -87,24 +87,11 @@ public class DatabaseService
             return (executionResult, null);
     }
 
-    private async Task LogExecutionAsync(
-        NpgsqlConnection connection,
-        QueryMessage message,
-        string status)
+    public async Task UpdateFailedStatus(Guid executionId)
     {
-        await connection.ExecuteAsync(@"
-            INSERT INTO query_executions 
-                (id, original_command, generated_sql, status, created_at)
-            VALUES 
-                (@Id, @OriginalCommand, @GeneratedSql, @Status, @CreatedAt)",
-            new
-            {
-                Id = message.ExecutionId,
-                message.OriginalCommand,
-                message.GeneratedSql,
-                Status = status,
-                message.CreatedAt
-            });
+        await using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+        await UpdateExecutionStatusAsync(connection, executionId, "failed");
     }
 
     public async Task LogAttemptAsync(

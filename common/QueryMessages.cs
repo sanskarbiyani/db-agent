@@ -8,22 +8,15 @@ public class QueryMessage
     public DateTime CreatedAt { get; set; }
 }
 
-public class RetryMessage
+public class RetryMessage: QueryMessage
 {
-    public Guid ExecutionId { get; set; }
-    public string OriginalCommand { get; set; } = string.Empty;
-    public string GeneratedSql { get; set; } = string.Empty;
     public string ErrorType { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;
     public int AttemptNumber { get; set; }
-    public DateTime CreatedAt { get; set; }
 }
 
-public class FailedQueryMessage
+public class FailedQueryMessage: QueryMessage
 {
-    public Guid ExecutionId { get; set; }
-    public string OriginalCommand { get; set; } = string.Empty;
-    public string GeneratedSql { get; set; } = string.Empty;
     public string ErrorType { get; set; } = string.Empty;
     public string ErrorMessage { get; set; } = string.Empty;
     public int TotalAttempts { get; set; }
