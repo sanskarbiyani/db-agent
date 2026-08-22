@@ -1,9 +1,10 @@
 using DbAgent.Api.Common;
 using DbAgent.Api.Kafka;
-using DbAgent.Api.Models;
 using DbAgent.Common;
 using DbAgent.Common.Messages;
+using DbAgent.Common.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json.Serialization;
 
 namespace DbAgent.Api.Controllers;
 
@@ -75,7 +76,8 @@ public class CommandController : ControllerBase
                 ExecutionId = executionId,
                 OriginalCommand = request.Command,
                 GeneratedSql = sqlResult.Sql,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Schema = System.Text.Json.JsonSerializer.Serialize(sqlResult.Schema)
             };
 
             bool result = await _databaseService.InsertIntoQueryAttempt(message.OriginalCommand, message.GeneratedSql, message.ExecutionId);

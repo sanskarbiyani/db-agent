@@ -16,7 +16,7 @@ public class DatabaseService: IDatabaseService
         _logger = logger;
     }
 
-    public async Task<(ExecutionResult, ErrorCategory? errorCategory)> ExecuteSqlAsync(QueryMessage message)
+    public async Task<(ExecutionResult, ErrorCategory? errorCategory)> ExecuteSqlAsync(QueryMessage message, bool isFixed = false)
     {
         await using NpgsqlConnection connection = new NpgsqlConnection(_connectionString);
         try
@@ -70,15 +70,18 @@ public class DatabaseService: IDatabaseService
             var errorCategory = ErrorClassifier.Classify(executionResult.ErrorType!, executionResult.ErrorMessage!);
 
             string errorStatus = "failed";
-            errorStatus = errorCategory switch
+            if (!isFixed)
             {
-                ErrorCategory.ImmediateRetry or ErrorCategory.BackoffRetry => "retrying",
-                ErrorCategory.AgentFixable => "fixing",
-                ErrorCategory.AlreadySatisfied => "already_satisfied",
-                ErrorCategory.ManualReview => "manual_review",
-                ErrorCategory.Fatal or ErrorCategory.NonFixable => "failed",
-                _ => errorStatus
-            };
+                errorStatus = errorCategory switch
+                {
+                    ErrorCategory.ImmediateRetry or ErrorCategory.BackoffRetry => "retrying",
+                    ErrorCategory.AgentFixable => "fixing",
+                    ErrorCategory.AlreadySatisfied => "already_satisfied",
+                    ErrorCategory.ManualReview => "manual_review",
+                    ErrorCategory.Fatal or ErrorCategory.NonFixable => "failed",
+                    _ => errorStatus
+                };
+            }
 
             await UpdateExecutionStatusAsync(connection, message.ExecutionId, errorStatus);
             return (executionResult, errorCategory);
@@ -99,7 +102,9 @@ public class DatabaseService: IDatabaseService
         int attemptNumber,
         string errorType,
         string errorMessage,
-        bool resolved)
+        bool resolved,
+        string sql,
+        string attemptType = "retry")
     {
         try
         {
@@ -108,9 +113,9 @@ public class DatabaseService: IDatabaseService
 
             await connection.ExecuteAsync(@"
             INSERT INTO query_attempts
-                (id, execution_id, attempt_number, error_type, error_message, attempted_at, resolved)
+                (id, execution_id, attempt_number, error_type, error_message, attempted_at, resolved, attempt_type, sql)
             VALUES
-                (@Id, @ExecutionId, @AttemptNumber, @ErrorType, @ErrorMessage, @AttemptedAt, @Resolved)",
+                (@Id, @ExecutionId, @AttemptNumber, @ErrorType, @ErrorMessage, @AttemptedAt, @Resolved, @AttemptType, @Sql)",
                 new
                 {
                     Id = Guid.NewGuid(),
@@ -119,7 +124,9 @@ public class DatabaseService: IDatabaseService
                     ErrorType = errorType,
                     ErrorMessage = errorMessage,
                     AttemptedAt = DateTime.UtcNow,
-                    Resolved = resolved
+                    Resolved = resolved,
+                    AttemptType = attemptType,
+                    Sql = sql
                 });
         }
         catch (Exception ex)

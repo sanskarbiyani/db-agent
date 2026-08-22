@@ -6,6 +6,7 @@ public class QueryMessage
     public string OriginalCommand { get; set; } = string.Empty;
     public string GeneratedSql { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public string Schema { get; set; } = string.Empty; // Required for Fix Agent flow
 }
 
 public class RetryMessage: QueryMessage

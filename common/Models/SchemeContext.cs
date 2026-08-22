@@ -1,4 +1,4 @@
-﻿namespace DbAgent.Api.Models
+﻿namespace DbAgent.Common.Models
 {
     public record ColumnInfo(string Name, string DataType, bool IsNullable);
     public record TableInfo(string Name, List<ColumnInfo> Columns);

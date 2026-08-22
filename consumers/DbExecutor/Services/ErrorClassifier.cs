@@ -39,7 +39,9 @@ public static class ErrorClassifier
             "53400" => ErrorCategory.BackoffRetry,   // configuration limit exceeded (Check)
 
             // Schema errors — agent fixable
-            "42601" => ErrorCategory.AgentFixable,     // syntax error
+            "42601" => ErrorCategory.AgentFixable,   // syntax error
+            "42P01" => ErrorCategory.AgentFixable,   // table not found
+            "42703" => ErrorCategory.AgentFixable,   // column not found
 
             // Already satisfied  - Mark as not required
             "42P07" => ErrorCategory.AlreadySatisfied,  // table already exists
@@ -51,8 +53,6 @@ public static class ErrorClassifier
             "42804" => ErrorCategory.ManualReview,     // datatype mismatch (could be fixable but needs review)
 
             // Non fixable errors — straight to failed
-            "42P01" => ErrorCategory.Fatal,     // table not found
-            "42703" => ErrorCategory.Fatal,     // column not found
             "23000" => ErrorCategory.Fatal,     // integrity constraint violation
             "23505" => ErrorCategory.Fatal,     // unique violation
             "UNKNOWN_ERROR" => ErrorCategory.Fatal,

@@ -55,6 +55,7 @@ namespace DbAgent.DbExecutor
                 await Task.Delay(TimeSpan.FromSeconds(delay));
 
                 var (result, category) = await _databaseService.ExecuteSqlAsync(item);
+                await _databaseService.LogAttemptAsync(item.ExecutionId, item.AttemptNumber, result.ErrorType ?? "", result.ErrorMessage ?? "", result.IsSuccess, item.GeneratedSql);
 
                 if (result.IsSuccess)
                 {
@@ -67,8 +68,6 @@ namespace DbAgent.DbExecutor
                     _logger.LogWarning(
                         "Execution failed for retry. ExecutionId: {ExecutionId}, ErrorType: {ErrorType}, Category: {Category}, AttemptNumber: {AttemptNumber}",
                         item.ExecutionId, result.ErrorType, category, item.AttemptNumber);
-
-                    await _databaseService.LogAttemptAsync(item.ExecutionId, item.AttemptNumber, result.ErrorType ?? "", result.ErrorMessage ?? "", false);
 
                     if(item.AttemptNumber < BackoffSeconds.Length)
                     {

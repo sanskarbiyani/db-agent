@@ -7,14 +7,14 @@ using System.Text.Json;
 
 namespace DbAgent.DbExecutor;
 
-public class Worker : BackgroundService
+public class PendingQueryConsumer : BackgroundService
 {
-    private readonly ILogger<Worker> _logger;
+    private readonly ILogger<PendingQueryConsumer> _logger;
     private readonly IConfiguration _configuration;
     private readonly IDatabaseService _databaseService;
 
-    public Worker(
-        ILogger<Worker> logger,
+    public PendingQueryConsumer(
+        ILogger<PendingQueryConsumer> logger,
         IConfiguration configuration,
         IDatabaseService databaseService)
     {
@@ -36,7 +36,7 @@ public class Worker : BackgroundService
         using var consumer = new ConsumerBuilder<string, string>(config).Build();
         consumer.Subscribe(KafkaTopics.PendingQueries);
 
-        _logger.LogInformation("DbExecutor started, listening on {Topic}", KafkaTopics.PendingQueries);
+        _logger.LogInformation("PendingQueryConsumer started, listening on {Topic}", KafkaTopics.PendingQueries);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -117,7 +117,8 @@ public class Worker : BackgroundService
             ErrorType = result.ErrorType!,
             ErrorMessage = result.ErrorMessage!,
             AttemptNumber = 1,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            Schema = message.Schema
         };
 
         var topic = category switch

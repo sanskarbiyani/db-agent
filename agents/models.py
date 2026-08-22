@@ -77,3 +77,13 @@ class GenerateSQLRequest(BaseModel):
 
 class RelevantTables(BaseModel):
     tables: list[str]
+
+class FixSQLRequest(CamelModel):
+    command: str
+    schema_context: SchemaContext
+    sql: str
+    error_message: str
+
+class FixSQLResponse(BaseModel):
+    sql: str
+    error: str | None = None
